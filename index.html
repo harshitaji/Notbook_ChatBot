@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Q&A System</title>
+    <style>
+        :root {
+            --card: #ffffff;
+            --border: #e5e7eb;
+            --primary: #2563eb;
+            --primary-700: #1d4ed8;
+            --muted: #6b7280;
+            --error: #dc2626;
+            --success: #059669;
+            --badge: #e0e7ff;
+            --badge-text: #3730a3;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #f9fafb;
+            color: #111827;
+            line-height: 1.5;
+            padding: 20px;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 18px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        @media (min-width: 950px) {
+            .layout { 
+                grid-template-columns: 1.15fr 0.85fr; 
+            }
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 20px;
+            box-shadow: 0 14px 28px rgba(0,0,0,0.06);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 35px rgba(0,0,0,0.08);
+        }
+
+        .section-title {
+            margin: 4px 0 14px;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+        }
+
+        .row { 
+            display: grid; 
+            gap: 8px; 
+            margin-bottom: 16px; 
+        }
+
+        label { 
+            font-size: 14px; 
+            font-weight: 600; 
+            display: block;
+        }
+
+        textarea, input[type="text"] {
+            width: 100%;
+            padding: 11px 12px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            outline: none;
+            background: #fff;
+            transition: border 0.2s, box-shadow 0.2s;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        textarea:focus, input[type="text"]:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37,99,235,0.15);
+        }
+
+        input[type="file"] {
+            display: inline-block;
+            padding: 4px 0;
+            width: 100%;
+            font-size: 14px;
+        }
+
+        .muted { 
+            color: var(--muted); 
+            font-size: 12.5px; 
+            line-height: 1.4;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 6px;
+        }
+
+        button {
+            appearance: none;
+            border: none;
+            border-radius: 10px;
+            padding: 10px 16px;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: transform 0.05s ease, background 0.2s ease, box-shadow 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        button:active:not(:disabled) { 
+            transform: translateY(1px); 
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+            box-shadow: 0 8px 16px rgba(37,99,235,0.25);
+        }
+
+        .btn-primary:hover:not(:disabled) { 
+            background: var(--primary-700); 
+        }
+
+        .btn-secondary {
+            background: #eef2ff;
+            color: #3730a3;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: #e0e7ff;
+        }
+
+        .btn-danger {
+            background: #fee2e2;
+            color: var(--error);
+        }
+
+        .btn-danger:hover:not(:disabled) {
+            background: #fecaca;
+        }
+
+        .status {
+            margin-top: 10px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .status.ok {
+            display: block;
+            background: #ecfdf5;
+            color: var(--success);
+            border: 1px solid #a7f3d0;
+        }
+
+        .status.err {
+            display: block;
+            background: #fef2f2;
+            color: var(--error);
+            border: 1px solid #fecaca;
+        }
+
+        .answer {
+            white-space: pre-wrap;
+            margin-top: 12px;
+            line-height: 1.6;
+            font-size: 15px;
+        }
+
+        .sources {
+            color: var(--muted);
+            font-size: 13px;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed var(--border);
+        }
+
+        .history {
+            display: grid;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .history .item {
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px;
+            background: #fff;
+            transition: transform 0.2s ease;
+        }
+
+        .history .item:hover {
+            transform: translateX(2px);
+        }
+
+        .badge {
+            background: var(--badge);
+            color: var(--badge-text);
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 800;
+            margin-right: 6px;
+        }
+
+        .loader {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Mobile optimizations */
+        @media (max-width: 600px) {
+            body {
+                padding: 12px;
+            }
+            
+            .card {
+                padding: 16px;
+            }
+            
+            .actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            button {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="layout">
+        <!-- Left: Sources -->
+        <section class="card">
+            <div class="section-title">Sources</div>
+
+            <div class="row">
+                <label for="inlineText">Inline Text</label>
+                <textarea id="inlineText" rows="6" placeholder="Paste any text here..."></textarea>
+            </div>
+
+            <div class="row">
+                <label for="pdf">PDF (optional)</label>
+                <input id="pdf" type="file" accept="application/pdf" />
+                <div class="btn-secondary">Upload one PDF (optional). For scanned PDFs, text may be empty without OCR.</div>
+            </div>
+
+            <div class="row">
+                <label for="youtubeUrl">YouTube URL (optional)</label>
+                <input id="youtubeUrl" type="text" placeholder="https://www.youtube.com/watch?v=..." />
+            </div>
+
+            <div class="actions">
+                <button id="processBtn" class="btn-primary">
+                    <span>📄 Process Sources</span>
+                </button>
+                <button id="clearBtn" class="btn-danger">🧹 Clear All</button>
+            </div>
+
+            <div id="processStatus" class="status" role="alert" aria-live="polite"></div>
+        </section>
+
+        <!-- Right: Q&A -->
+        <section class="card">
+            <div class="section-title">Q&A</div>
+
+            <div class="row">
+                <label for="question">Question</label>
+                <input id="question" type="text" placeholder="Ask a question..." />
+            </div>
+
+            <div class="actions">
+                <button id="askBtn" class="btn-secondary" disabled>
+                    <span>Ask</span>
+                </button>
+            </div>
+
+            <div id="answer" class="answer" aria-live="polite"></div>
+            <div id="sources" class="sources"></div>
+
+            <div class="history" id="history"></div>
+        </section>
+    </div>
+
+    <script>
+        let sessionId = null;
+        let isProcessing = false;
+
+        function setStatus(msg, type) {
+            const el = document.getElementById("processStatus");
+            el.textContent = msg;
+            el.className = "status " + (type === "ok" ? "ok" : type === "err" ? "err" : "");
+            if (!type) el.style.display = "none";
+            
+            // Announce status changes for screen readers
+            if (msg && type) {
+                const announcement = document.createElement('div');
+                announcement.setAttribute('aria-live', 'assertive');
+                announcement.setAttribute('role', 'alert');
+                announcement.className = 'visually-hidden';
+                announcement.textContent = msg;
+                document.body.appendChild(announcement);
+                
+                setTimeout(() => {
+                    document.body.removeChild(announcement);
+                }, 1000);
+            }
+        }
+
+        function setButtonState(buttonId, isLoading) {
+            const button = document.getElementById(buttonId);
+            const span = button.querySelector('span');
+            
+            if (isLoading) {
+                const loader = document.createElement('span');
+                loader.className = 'loader';
+                button.prepend(loader);
+                span.textContent = buttonId === 'processBtn' ? 'Processing...' : 'Asking...';
+                button.disabled = true;
+            } else {
+                const loader = button.querySelector('.loader');
+                if (loader) loader.remove();
+                
+                if (buttonId === 'processBtn') {
+                    span.textContent = '📄 Process Sources';
+                    button.disabled = isProcessing;
+                } else {
+                    span.textContent = 'Ask';
+                    button.disabled = !sessionId;
+                }
+            }
+        }
+
+        function clearAll() {
+            // Inputs
+            document.getElementById("inlineText").value = "";
+            document.getElementById("youtubeUrl").value = "";
+            const pdfInput = document.getElementById("pdf");
+            pdfInput.value = ""; // clears selected file
+
+            // Outputs
+            document.getElementById("answer").textContent = "";
+            document.getElementById("sources").textContent = "";
+            document.getElementById("history").innerHTML = "";
+            setStatus("", null);
+
+            // State
+            sessionId = null;
+            isProcessing = false;
+            document.getElementById("askBtn").disabled = true;
+        }
+
+        async function processSources() {
+            const inlineText = document.getElementById("inlineText").value || "";
+            const youtubeUrl = document.getElementById("youtubeUrl").value || "";
+            const pdfInput = document.getElementById("pdf");
+            const file = pdfInput.files && pdfInput.files[0]; // Fixed the bug here
+
+            // Validate inputs
+            if (!inlineText && !youtubeUrl && !file) {
+                setStatus("Please provide at least one source (text, PDF, or YouTube URL)", "err");
+                return;
+            }
+
+            isProcessing = true;
+            setButtonState('processBtn', true);
+            setStatus("Processing sources...", "ok");
+
+            try {
+                const form = new FormData();
+                form.append("inlineText", inlineText);
+                form.append("youtubeUrl", youtubeUrl);
+                if (file) form.append("pdf", file);
+
+                const res = await fetch("/process", { method: "POST", body: form });
+                const data = await res.json();
+                
+                if (!res.ok) {
+                    throw new Error(data.error || "Failed to process sources");
+                }
+
+                sessionId = data.sessionId;
+                setStatus(`Ready. Processed ${data.chunks} chunks. Session: ${sessionId}`, "ok");
+                document.getElementById("askBtn").disabled = false;
+                
+                // Focus on question input for better UX
+                document.getElementById("question").focus();
+            } catch (e) {
+                setStatus("Error: " + e.message, "err");
+                console.error("Processing error:", e);
+            } finally {
+                isProcessing = false;
+                setButtonState('processBtn', false);
+            }
+        }
+
+        async function askQuestion() {
+            const questionInput = document.getElementById("question");
+            const q = questionInput.value.trim();
+            
+            if (!q || !sessionId) return;
+
+            setButtonState('askBtn', true);
+            document.getElementById("answer").textContent = "Thinking...";
+            document.getElementById("sources").textContent = "";
+
+            try {
+                const res = await fetch("/ask", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ sessionId, query: q }),
+                });
+                
+                const data = await res.json();
+                if (!res.ok) {
+                    throw new Error(data.error || "Failed to get answer");
+                }
+
+                document.getElementById("answer").textContent = data.text || "No answer available.";
+                
+                const sources = (data.sources || []).map(s => s.source).join(", ");
+                document.getElementById("sources").textContent = sources ? `Sources: ${sources}` : "";
+
+                // Add to history
+                addToHistory(q, data.text || "", sources);
+                
+                // Clear question input
+                questionInput.value = "";
+            } catch (e) {
+                document.getElementById("answer").textContent = "Error: " + e.message;
+                console.error("Asking error:", e);
+            } finally {
+                setButtonState('askBtn', false);
+            }
+        }
+
+        function addToHistory(question, answer, sources) {
+            const historyContainer = document.getElementById("history");
+            const item = document.createElement("div");
+            item.className = "item";
+            item.innerHTML = `
+                <div><span class="badge">Q</span>${escapeHtml(question)}</div>
+                <div style="margin-top:8px;"><span class="badge">A</span>${escapeHtml(answer)}</div>
+                ${sources ? `<div style="margin-top:6px;font-size:13px;color:var(--muted);">Sources: ${escapeHtml(sources)}</div>` : ''}
+            `;
+            
+            // Add to top of history
+            if (historyContainer.firstChild) {
+                historyContainer.insertBefore(item, historyContainer.firstChild);
+            } else {
+                historyContainer.appendChild(item);
+            }
+            
+            // Limit history to 10 items
+            if (historyContainer.children.length > 10) {
+                historyContainer.removeChild(historyContainer.lastChild);
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Event listeners
+        document.getElementById("processBtn").addEventListener("click", processSources);
+        document.getElementById("askBtn").addEventListener("click", askQuestion);
+        document.getElementById("clearBtn").addEventListener("click", clearAll);
+        
+        // Allow submitting with Enter key
+        document.getElementById("question").addEventListener("keypress", function(e) {
+            if (e.key === "Enter" && !document.getElementById("askBtn").disabled) {
+                askQuestion();
+            }
+        });
+
+        // Check if inputs have content to enable/disable process button
+        const inputs = ['inlineText', 'youtubeUrl', 'pdf'];
+        inputs.forEach(id => {
+            const element = document.getElementById(id);
+            if (element.type === 'file') {
+                element.addEventListener('change', toggleProcessButton);
+            } else {
+                element.addEventListener('input', toggleProcessButton);
+            }
+        });
+
+        function toggleProcessButton() {
+            const inlineText = document.getElementById("inlineText").value;
+            const youtubeUrl = document.getElementById("youtubeUrl").value;
+            const pdfFile = document.getElementById("pdf").files.length > 0;
+            
+            document.getElementById("processBtn").disabled = !(inlineText || youtubeUrl || pdfFile);
+        }
+    </script>
+</body>
+</html>
